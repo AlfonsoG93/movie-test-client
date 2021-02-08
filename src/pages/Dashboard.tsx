@@ -8,6 +8,7 @@ import {Movie} from "../Interfaces/Movie";
 import MovieModal from "../Components/MovieModal";
 import {store} from "react-notifications-component";
 import {AuthContext} from "../Authorization";
+import {useCookies} from "react-cookie";
 
 export interface MovieQuery {
 	pageNumber: number
@@ -41,6 +42,8 @@ export const initialQuery: MovieQuery = {
 };
 
 const Dashboard: React.FC = (props: any) => {
+	
+	const [cookies, setCookie] = useCookies(['filterCookie'] );
 	
 	const context = useContext(AuthContext);
 	const [selectedMovie, setSelectedMovie] = useState<Movie | undefined>(undefined);
@@ -151,6 +154,20 @@ const Dashboard: React.FC = (props: any) => {
 			})
 		}
 	}, [rating, error]);
+	
+	useEffect(() => {
+		const filterCookie = cookies.filterCookie;
+		console.log(filterCookie)
+		if (filterCookie) {
+			if (queryParams.field !== filterCookie.field || queryParams.order !== filterCookie.order ){
+				setQueryParams({...queryParams,
+					order: filterCookie.order,
+					field: filterCookie.field,
+					pageNumber: 0
+				})
+			}
+		}
+	},[cookies])
 	return (
 		<Container fluid={(window.screen.width <= 780)}>
 			<h1> Movies </h1>
@@ -199,6 +216,7 @@ const Dashboard: React.FC = (props: any) => {
 				queryParams={queryParams}
 				tableLoading={loading}
 				getNext={getNext}
+				setCookie={setCookie}
 				selectMovie={setSelectedMovie}
 				changeQuery={setQueryParams}
 				topOfTable={topOfModule}

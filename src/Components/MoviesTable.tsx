@@ -32,11 +32,12 @@ interface MoviesTableProps {
 	topOfTable: any
 	changeQuery: (movieQ: MovieQuery) => void
 	selectMovie: (movie: Movie) => void
+	setCookie: (cookieName: string, value: any) => void
 }
 
 const tableHeaders: string[] = ["Grade", "Title", "Release Date", "Cast", "Duration", "Ratings"];
 const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
-	const {tableLoading, movies, getNext, queryParams, topOfTable, changeQuery, selectMovie} = props;
+	const {tableLoading, movies, getNext, queryParams, topOfTable, changeQuery, selectMovie, setCookie} = props;
 	const [addRating, {loading}] = useMutation(ADD_RATING, {
 		refetchQueries: [
 			{
@@ -68,7 +69,7 @@ const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
 					onScreen: true
 				}
 				
-			})
+			});
 		}
 	});
 	
@@ -114,54 +115,71 @@ const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
 		if (header === "Grade") {
 			if (currentArrow === "arrow down") {
 				newQueryParams = {...queryParams, order: "asc", field: "grade", pageNumber: 0};
+				setCookie("filterCookie", {order: "asc", field: "grade"});
 				changeQuery(newQueryParams);
 			} else if (currentArrow === "arrow up") {
 				newQueryParams = {...queryParams, order: "desc", field: "grade", pageNumber: 0};
+				setCookie("filterCookie", {order: "desc", field: "grade"});
 				changeQuery(newQueryParams);
 			}
 		}
 		if (header === "Title") {
 			if (currentArrow === "arrow down") {
 				newQueryParams = {...queryParams, order: "asc", field: "title", pageNumber: 0};
+				setCookie("filterCookie", {order: "asc", field: "title"});
 				changeQuery(newQueryParams);
 			} else if (currentArrow === "arrow up") {
 				newQueryParams = {...queryParams, order: "desc", field: "title", pageNumber: 0};
+				setCookie("filterCookie", {order: "desc", field: "title"});
+				
 				changeQuery(newQueryParams);
 			}
 		}
 		if (header === "Release Date") {
 			if (currentArrow === "arrow down") {
 				newQueryParams = {...queryParams, order: "asc", field: "releaseDate", pageNumber: 0};
+				setCookie("filterCookie", {order: "asc", field: "releaseDate"});
+				
 				changeQuery(newQueryParams);
 			} else if (currentArrow === "arrow up") {
 				newQueryParams = {...queryParams, order: "desc", field: "releaseDate", pageNumber: 0};
+				setCookie("filterCookie", {order: "desc", field: "releaseDate"});
 				changeQuery(newQueryParams);
 			}
 		}
 		if (header === "Cast") {
 			if (currentArrow === "arrow down") {
 				newQueryParams = {...queryParams, order: "asc", field: "actors", pageNumber: 0};
+				setCookie("filterCookie", {order: "asc", field: "actors"});
+				
 				changeQuery(newQueryParams);
 			} else if (currentArrow === "arrow up") {
 				newQueryParams = {...queryParams, order: "desc", field: "actors", pageNumber: 0};
+				setCookie("filterCookie", {order: "desc", field: "actors"});
 				changeQuery(newQueryParams);
 			}
 		}
 		if (header === "Duration") {
 			if (currentArrow === "arrow down") {
 				newQueryParams = {...queryParams, order: "asc", field: "duration", pageNumber: 0};
+				setCookie("filterCookie", {order: "asc", field: "duration"});
+				
 				changeQuery(newQueryParams);
 			} else if (currentArrow === "arrow up") {
 				newQueryParams = {...queryParams, order: "desc", field: "duration", pageNumber: 0};
+				setCookie("filterCookie", {order: "desc", field: "duration"});
 				changeQuery(newQueryParams);
 			}
 		}
 		if (header === "Ratings") {
 			if (currentArrow === "arrow down") {
 				newQueryParams = {...queryParams, order: "asc", field: "ratingCount", pageNumber: 0};
+				setCookie("filterCookie", {order: "asc", field: "duration"});
+				
 				changeQuery(newQueryParams);
 			} else if (currentArrow === "arrow up") {
 				newQueryParams = {...queryParams, order: "desc", field: "ratingCount", pageNumber: 0};
+				setCookie("filterCookie", {order: "desc", field: "duration"});
 				changeQuery(newQueryParams);
 			}
 		}

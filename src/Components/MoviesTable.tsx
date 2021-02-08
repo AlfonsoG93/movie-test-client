@@ -13,7 +13,7 @@ import {
 	RatingProps,
 	Statistic
 } from "semantic-ui-react";
-import {Movie} from "../Interfaces/Movie";
+import {generateRating, Movie} from "../Interfaces/Movie";
 import {useMutation} from "@apollo/client";
 import {ADD_RATING, FETCH_MOVIES_QUERY} from "../Services/movieServices";
 import {Paper, Table, TableBody, TableCell, TableHead, TableRow} from "@material-ui/core";
@@ -29,13 +29,14 @@ interface MoviesTableProps {
 	queryParams: MovieQuery
 	refetch: (newQueryParams?: MovieQuery) => void
 	topOfTable: any
+	changeQuery: (movieQ: MovieQuery) => void
+	selectMovie: (movie: Movie) => void
 }
 
-const tableHeaders: string[] = ["Grade", "Title", "Release Date", "Cast", "Duration", "Stars"];
+const tableHeaders: string[] = ["Grade", "Title", "Release Date", "Cast", "Duration", "Ratings"];
 const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
-	const {tableLoading, movies, getNext, queryParams, refetch, topOfTable} = props;
-	const [selectedMovie, setSelectedMovie] = useState<string>("");
-	const [addRating, {loading, data}] = useMutation(ADD_RATING, {
+	const {tableLoading, movies, getNext, queryParams, topOfTable, changeQuery, selectMovie} = props;
+	const [addRating, {loading}] = useMutation(ADD_RATING, {
 		refetchQueries: [
 			{
 				query: FETCH_MOVIES_QUERY,
@@ -51,7 +52,6 @@ const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
 				data: {addRating}
 			}
 		) {
-			refetch();
 		},
 		onError(err: ApolloError) {
 			console.log(err.message);
@@ -120,21 +120,20 @@ const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
 				newQueryParams = {...queryParams, order: "asc", field: "duration"};
 			} else newQueryParams = {...queryParams, order: "desc", field: "duration"};
 		}
-		refetch(newQueryParams);
+		changeQuery(newQueryParams);
 	};
 	
-	const selectRowHandler = (movie: string) => {
-		setSelectedMovie(movie);
+	const selectRowHandler = (movie: Movie) => {
+		selectMovie(movie);
 	};
 	
-	const addRatingHandler = (e: any, movieId: string, rating: RatingProps) => {
+	const addRatingHandler = (e: any, movie: Movie, ratingObj: RatingProps) => {
+		const {rating} = ratingObj;
 		e.stopPropagation();
+		const newMovieRating = generateRating(movie.id || "", rating as number);
 		addRating({
-			variables: {
-				movieId,
-				score: rating.rating
-			}
-		})
+			variables: {...newMovieRating}
+		});
 	};
 	
 	const calcStarNum = (grade: number) => {
@@ -177,21 +176,21 @@ const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
 		if (column === "Duration") {
 			return moment.utc(movie.duration * 1000).format("HH:mm:ss");
 		}
-		if (column === "Stars") {
+		if (column === "Ratings") {
 			const label = (movie.ratingCount === 1) ? "Rating" : "Ratings";
 			return (
 				<Label>
-					<Grid columns={(window.screen.width >= 720) ? 2 : 1}>
+					<Grid doubling columns={(window.screen.width >= 720) ? 2 : 1}>
 						<GridRow centered verticalAlign={"middle"} textAlign={"center"}>
-							<GridColumn>
+							<GridColumn verticalAlign={"middle"}>
 								<Rating
 									icon={"star"}
-									onRate={(e, rating) => addRatingHandler(e, movie.id, rating)}
+									onRate={(e, rating) => addRatingHandler(e, movie, rating)}
 									rating={calcStarNum(movie.grade)}
 									maxRating={5}
 								/>
 							</GridColumn>
-							<GridColumn>
+							<GridColumn verticalAlign={"middle"}>
 								<div>{movie.ratingCount} {label}</div>
 							</GridColumn>
 						</GridRow>
@@ -205,62 +204,63 @@ const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
 		<div style={{height: "60vh", overflow: "auto"}}>
 			<span ref={topOfTable}/>
 			<Paper>
-				<Table
-					stickyHeader
-					className="scroll-table"
-				>
-					<TableHead>
-						<TableRow>
-							{tableHeaders.map((header: string) => (
-								<TableCell key={header}>
-									<Grid>
-										<GridRow>
-											<GridColumn width={1} verticalAlign={"middle"}>
-												{(header !== "Stars") && <Icon
-													onClick={() => handleFilter(header)}
-													style={{cursor: "pointer"}}
-													name={getFilterArrow(header) as any}
-													color={"blue"}
-												/>}
-											</GridColumn>
-											<GridColumn width={6}>
-												<Header size='small'>{header}</Header>
-											</GridColumn>
-										</GridRow>
-									</Grid>
-								</TableCell>
-							))}
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{movies && movies.map((movie: Movie, index: number) => (
-							<TableRow
-								style={{cursor: "pointer"}}
-								key={`job-row-${movie.id}-${index}`}
-								hover={true}
-								onClick={() => selectRowHandler(movie.id)}
-							>
-								{(tableLoading || loading)
-								 ? <Loader>Loading</Loader>
-								 : tableHeaders.map((column: string, columnIndex: number) => (
-										<TableCell
-											key={`movie-cell-${movie.id}-${column}`}
-											component="th"
-											scope="row"
-										>
-											{index === movies.length - 1 && columnIndex === 1 && (
-												<Waypoint
-													key={`job-waypoint-${movie.id}-${index}-${columnIndex}`}
-													onEnter={getNext}
-												/>
-											)}
-											{getField(column, movie)}
-										</TableCell>
-									))}
-							</TableRow>
-						))}
-					</TableBody>
-				</Table>
+				{(tableLoading || loading)
+				 ? (<Loader>Loading</Loader>)
+				 : <Table
+					 stickyHeader
+					 className="scroll-table"
+				 >
+					 <TableHead>
+						 <TableRow>
+							 {tableHeaders.map((header: string) => (
+								 <TableCell key={header}>
+									 <Grid>
+										 <GridRow>
+											 <GridColumn width={1} verticalAlign={"middle"}>
+												 {(header !== "Ratings") && <Icon
+													 onClick={() => handleFilter(header)}
+													 style={{cursor: "pointer"}}
+													 name={getFilterArrow(header) as any}
+													 color={"blue"}
+												 />}
+											 </GridColumn>
+											 <GridColumn width={6}>
+												 <Header size='small'>{header}</Header>
+											 </GridColumn>
+										 </GridRow>
+									 </Grid>
+								 </TableCell>
+							 ))}
+						 </TableRow>
+					 </TableHead>
+					 <TableBody>
+						 {movies && movies.map((movie: Movie, index: number) => (
+							 <TableRow
+								 style={{cursor: "pointer"}}
+								 key={`job-row-${movie.id}-${index}`}
+								 hover={true}
+								 onClick={() => selectRowHandler(movie)}
+							 >
+								 {tableHeaders.map((column: string, columnIndex: number) => (
+									 <TableCell
+										 key={`movie-cell-${movie.id}-${column}`}
+										 component="th"
+										 scope="row"
+									 >
+										 {index === movies.length - 1 && columnIndex === 1 && (
+											 <Waypoint
+												 key={`job-waypoint-${movie.id}-${index}-${columnIndex}`}
+												 onEnter={getNext}
+											 />
+										 )}
+										 {getField(column, movie)}
+									 </TableCell>
+								 ))}
+							 </TableRow>
+						 ))}
+					 </TableBody>
+				 </Table>
+				}
 			</Paper>
 		</div>
 	);

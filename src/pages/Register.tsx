@@ -65,8 +65,8 @@ const Register: React.FC = (props: any) => {
 						placeholder="Username.."
 						name="username"
 						type="text"
-						value={values.username}
-						error={!!errors.username}
+						value={(values) ? values.username : ""}
+						error={(errors) ? !!errors.username : false}
 						onChange={onChange}
 					/>
 					<Form.Input
@@ -75,8 +75,8 @@ const Register: React.FC = (props: any) => {
 						placeholder="Email.."
 						name="email"
 						type="email"
-						value={values.email}
-						error={!!errors.email}
+						value={(values) ? values.email : ""}
+						error={(errors) ? !!errors.email : false}
 						onChange={onChange}
 					/>
 					<Form.Input
@@ -85,8 +85,8 @@ const Register: React.FC = (props: any) => {
 						placeholder="Password.."
 						name="password"
 						type="password"
-						value={values.password}
-						error={!!errors.password}
+						value={(values) ? values.password : ""}
+						error={(errors) ? !!errors.password : false}
 						onChange={onChange}
 					/>
 					<Form.Input
@@ -95,8 +95,8 @@ const Register: React.FC = (props: any) => {
 						placeholder="Confirm Password.."
 						name="confirmPassword"
 						type="password"
-						value={values.confirmPassword}
-						error={!!errors.confirmPassword}
+						value={(values) ? values.confirmPassword : ""}
+						error={(errors) ? !!errors.confirmPassword : false}
 						onChange={onChange}
 					/>
 					<Button type="submit" primary>

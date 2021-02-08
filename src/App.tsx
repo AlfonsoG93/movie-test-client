@@ -5,14 +5,17 @@ import "./App.css";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Navbar from "./Components/Navbar"
-import {Container} from "semantic-ui-react"
-import {AuthProvider} from "./Authorization"
+import Navbar from "./Components/Navbar";
+import {Container} from "semantic-ui-react";
+import {AuthProvider} from "./Authorization";
 import AuthRoute from "./Components/AuthRoute";
+import ReactNotification from "react-notifications-component";
+import "react-notifications-component/dist/theme.css";
 
 const App: React.FC = () => {
 	return (
 		<AuthProvider>
+			<ReactNotification/>
 			<Router>
 				<Container fluid>
 					<Route path={"/"} component={Navbar}/>
@@ -23,6 +26,6 @@ const App: React.FC = () => {
 			</Router>
 		</AuthProvider>
 	);
-}
+};
 
 export default App;

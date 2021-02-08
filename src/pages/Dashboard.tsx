@@ -1,9 +1,13 @@
-import React, {useState} from "react";
-import {useQuery} from "@apollo/client";
-import {FETCH_MOVIES_QUERY} from "../Services/movieServices";
-import {Container} from "semantic-ui-react";
+import React, {createRef, useContext, useEffect, useState} from "react";
+import {useQuery, useSubscription} from "@apollo/client";
+import {FETCH_MOVIES_QUERY, GET_NEW_RATING} from "../Services/movieServices";
+import {Button, Container, Grid, GridColumn, GridRow} from "semantic-ui-react";
 import MoviesTable from "../Components/MoviesTable";
 import {ApolloError} from "apollo-client";
+import {Movie} from "../Interfaces/Movie";
+import MovieModal from "../Components/MovieModal";
+import {store} from "react-notifications-component";
+import {AuthContext} from "../Authorization";
 
 export interface MovieQuery {
 	pageNumber: number
@@ -14,6 +18,20 @@ export interface MovieQuery {
 	
 }
 
+interface RatingNotification {
+	title: string
+	createdAt: string
+	score: number
+	username: string
+}
+
+const initialNotification: RatingNotification = {
+	title: "",
+	createdAt: "",
+	score: 0,
+	username: ""
+};
+
 export const initialQuery: MovieQuery = {
 	pageNumber: 1,
 	pageSize: 10,
@@ -22,39 +40,58 @@ export const initialQuery: MovieQuery = {
 	order: "desc"
 };
 
-const Dashboard: React.FC = () => {
+const Dashboard: React.FC = (props: any) => {
+	
+	const context = useContext(AuthContext);
+	const [selectedMovie, setSelectedMovie] = useState<Movie | undefined>(undefined);
+	const [filterMode, setMode] = useState("");
+	const [addMovie, setAddMovie] = useState<boolean>(false);
 	const [error, setError] = useState("");
 	const [queryParams, setQueryParams] = useState<MovieQuery>(initialQuery);
-	const topOfModule = React.createRef<HTMLElement>();
+	const topOfModule = createRef<HTMLElement>();
+	const [rating, setRating] = useState<RatingNotification>(initialNotification);
 	
-	const {loading, fetchMore, data, refetch} = useQuery(FETCH_MOVIES_QUERY, {
-		variables: {...queryParams},
-		onError(err: ApolloError) {
-			setError(err.message);
+	
+	const {data: ratingData} = useSubscription(GET_NEW_RATING, {
+		
+		onSubscriptionData({subscriptionData}: { subscriptionData: any }) {
+			const newestRating = subscriptionData.data.newestRating;
+			const {user} : {user: any} = context
+			if (user) {
+				if (newestRating.rating.createdAt !== rating?.createdAt && newestRating.rating.username !== user.username) {
+					setRating({
+						title: newestRating.movie,
+						createdAt: newestRating.rating.createdAt,
+						score: newestRating.rating.score,
+						username: newestRating.rating.username
+					});
+				}
+			}
 		}
 	});
 	
-	const reFetch = async (newQueryParams?: MovieQuery) => {
-		try {
-			if (newQueryParams) {
-				await refetch({
-					...newQueryParams,
-					pageNumber: 0
-				});
-				setQueryParams(newQueryParams);
-			} else {
-				await refetch({
-					...queryParams,
-					pageNumber: 0
-				});
-			}
-		} catch (e) {
-			setError(e.message);
+	const {loading, fetchMore, data} = useQuery(FETCH_MOVIES_QUERY, {
+		variables: {...queryParams, pageNumber: 0},
+		onError(err: ApolloError) {
+			setError(err.message);
+		},
+		onCompleted(data) {
 		}
-	};
+	});
+	
+	/*	const reFetch = async (newQueryParams?: MovieQuery) => {
+	 console.log("PRE_REFETCH_PARAMS: ", queryParams)
+	 const refetchParams = (newQueryParams) ? {...newQueryParams, pageNumber: 0} : {...queryParams, pageNumber: 0};
+	 console.log("REFETCH_PARAMS: ",refetchParams)
+	 try {
+	 setQueryParams(refetchParams)
+	 } catch (e) {
+	 setError(e.message);
+	 }
+	 };*/
 	const getNext = async () => {
 		if (data && data.getMovies.hasMore) {
-			const nextQuery = (queryParams) ? {...queryParams, pageNumber: queryParams.pageNumber + 1} : initialQuery;
+			const nextQuery = {...queryParams, pageNumber: queryParams.pageNumber + 1};
 			try {
 				await fetchMore({
 					variables: nextQuery,
@@ -72,15 +109,92 @@ const Dashboard: React.FC = () => {
 			}
 		}
 	};
+	
+	const closeModal = () => {
+		if (selectedMovie) {
+			setSelectedMovie(undefined);
+		}
+		if (addMovie) {
+			setAddMovie(false);
+		}
+	};
+	
+	useEffect(() => {
+		if (filterMode === "gen") {
+			setQueryParams({...queryParams, userMovies: false});
+		} else if (filterMode === "user") {
+			setQueryParams({...queryParams, userMovies: true});
+		}
+	}, [filterMode]);
+	
+	useEffect(() => {
+		if (rating.createdAt) {
+			store.addNotification({
+					title: "New Rating!",
+					message: `${rating.title} was given ${rating.score} stars by ${rating.username}`,
+					type: "info",
+					insert: "top",
+					container: "top-right",
+					animationIn: ["animate__animated", "animate__fadeIn"],
+					animationOut: ["animate__animated", "animate__fadeOut"],
+					dismiss: {
+						duration: 5000,
+						onScreen: true
+					}
+					
+				}
+			);
+		}
+	}, [rating]);
+	
 	return (
 		<Container fluid={(window.screen.width <= 780)}>
-			<h1>Dashboard Screen</h1>
+			<h1> Movies </h1>
+			{(addMovie || !!selectedMovie) && <MovieModal open={true}
+			                                              newMovie={addMovie}
+			                                              selectedMovie={selectedMovie}
+			                                              closeModal={closeModal}
+			                                              queryParams={queryParams}
+			/>}
+			<Container textAlign={"center"}>
+				<Grid stackable padded>
+					<GridRow columns={3} style={{width: "50%"}}>
+						<GridColumn>
+							<Button
+								color={"blue"}
+								onClick={() => setMode("gen")}
+								disabled={(filterMode === "gen")}
+							>
+								Available Movies
+							</Button>
+						</GridColumn>
+						<GridColumn>
+							<Button
+								color={"blue"}
+								onClick={() => setMode("user")}
+								disabled={(filterMode === "user")}
+							>
+								My Movies
+							</Button>
+						</GridColumn>
+						<GridColumn>
+							<Button
+								color={"teal"}
+								onClick={() => setAddMovie(true)}
+							>
+								Add Movie
+							</Button>
+						</GridColumn>
+					</GridRow>
+				</Grid>
+			</Container>
 			<MoviesTable
 				movies={(data) ? data.getMovies.movies : []}
 				queryParams={queryParams}
 				tableLoading={loading}
 				getNext={getNext}
-				refetch={reFetch}
+				selectMovie={setSelectedMovie}
+				changeQuery={setQueryParams}
 				topOfTable={topOfModule}
 			/>
 		</Container>

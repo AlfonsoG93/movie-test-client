@@ -44,7 +44,6 @@ const Login: React.FC = (props: any) => {
 	});
 	
 	function loginUserCallback() {
-		console.log(loginUser)
 		loginUser();
 	}
 	
@@ -60,7 +59,7 @@ const Login: React.FC = (props: any) => {
 						name="username"
 						type="text"
 						value={(values) ? values.username : ""}
-						error={!!errors.username}
+						error={(errors) ? !!errors.username : false}
 						onChange={onChange}
 					/>
 					<Form.Input
@@ -70,7 +69,7 @@ const Login: React.FC = (props: any) => {
 						name="password"
 						type="password"
 						value={(values) ? values.password : ""}
-						error={!!errors.password}
+						error={(errors) ? !!errors.password : false}
 						onChange={onChange}
 					/>
 					<Button type="submit" primary>

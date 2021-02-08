@@ -1,13 +1,12 @@
 import moment from "moment";
 
 export interface Rating {
-	username: string;
+	movieId: string;
 	score: number;
-	createdAt: string;
 }
 
 export interface Movie {
-	id: string;
+	id?: string;
 	title: string;
 	duration: number;
 	releaseDate: string;
@@ -21,13 +20,18 @@ export interface Movie {
 }
 
 export const defaultRating: Rating = {
-	username: "",
-	score: 0,
-	createdAt: moment().toISOString()
+	movieId: "",
+	score: 0
+}
+
+export const generateRating = (movieId: string, score: number) => {
+	return {
+		movieId,
+		score
+	}
 }
 
 export const defaultMovie: Movie = {
-	id: "",
 	title: "",
 	duration: 0,
 	releaseDate: moment().toISOString(),

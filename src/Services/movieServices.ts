@@ -41,16 +41,18 @@ export const FETCH_MOVIES_QUERY = gql`
 
 export const ADD_MOVIE = gql`
     mutation addMovie (
+        $id: ID!
         $title: String!
         $actors: [String]!
         $releaseDate: String!
         $duration: Int!
     ) {
         addMovie(addMovieInput: {
+            id: $id
             title: $title
             actors: $actors
             releaseDate: $releaseDate
-            duration: $Int
+            duration: $duration
         }) {
             title
             grade
@@ -58,9 +60,15 @@ export const ADD_MOVIE = gql`
     }
 `;
 
+export const DELETE_MOVIE = gql`
+    mutation deleteMovie ($id: ID!) {
+        deleteMovie(movieId: $id)
+    }
+`;
+
 export const ADD_RATING = gql`
     mutation addRating (
-        $movieId: String!
+        $movieId: ID!
         $score: Int!
     ) {
         addRating(addRatingInput: {
@@ -80,6 +88,7 @@ export const GET_NEW_RATING = gql`
             rating {
                 username
                 score
+                createdAt
             }
         }
     }

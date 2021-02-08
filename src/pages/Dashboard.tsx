@@ -157,7 +157,6 @@ const Dashboard: React.FC = (props: any) => {
 	
 	useEffect(() => {
 		const filterCookie = cookies.filterCookie;
-		console.log(filterCookie)
 		if (filterCookie) {
 			if (queryParams.field !== filterCookie.field || queryParams.order !== filterCookie.order ){
 				setQueryParams({...queryParams,

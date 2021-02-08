@@ -23,6 +23,7 @@ import {useMutation} from "@apollo/client";
 import {ADD_MOVIE, DELETE_MOVIE, FETCH_MOVIES_QUERY} from "../Services/movieServices";
 import {ApolloError} from "apollo-client";
 import {MovieQuery} from "../pages/Dashboard";
+import {store} from "react-notifications-component";
 
 interface MovieCompProps {
 	open: boolean
@@ -59,7 +60,7 @@ const MovieModal: React.FC<any> = (props: MovieCompProps) => {
 	const [actorInputError, setActorInputError] = useState(false);
 	const [time, setTime] = useState<TimeState>(initialTimeSelect);
 	
-	const [addMovie, {loading}] = useMutation(ADD_MOVIE, {
+	const [addMovie] = useMutation(ADD_MOVIE, {
 		refetchQueries: [
 			{
 				query: FETCH_MOVIES_QUERY,
@@ -80,7 +81,20 @@ const MovieModal: React.FC<any> = (props: MovieCompProps) => {
 			handleClose();
 		},
 		onError(err: ApolloError) {
-			console.log(err.message);
+			store.addNotification({
+				title: "New Error!",
+				message: `${err.message}`,
+				type: "info",
+				insert: "top",
+				container: "top-right",
+				animationIn: ["animate__animated", "animate__fadeIn"],
+				animationOut: ["animate__animated", "animate__fadeOut"],
+				dismiss: {
+					duration: 5000,
+					onScreen: true
+				}
+				
+			})
 			handleClose();
 		}
 	});

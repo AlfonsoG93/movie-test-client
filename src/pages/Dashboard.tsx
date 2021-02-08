@@ -52,11 +52,11 @@ const Dashboard: React.FC = (props: any) => {
 	const [rating, setRating] = useState<RatingNotification>(initialNotification);
 	
 	
-	const {data: ratingData} = useSubscription(GET_NEW_RATING, {
+	useSubscription(GET_NEW_RATING, {
 		
 		onSubscriptionData({subscriptionData}: { subscriptionData: any }) {
 			const newestRating = subscriptionData.data.newestRating;
-			const {user} : {user: any} = context
+			const {user}: { user: any } = context;
 			if (user) {
 				if (newestRating.rating.createdAt !== rating?.createdAt && newestRating.rating.username !== user.username) {
 					setRating({
@@ -79,16 +79,6 @@ const Dashboard: React.FC = (props: any) => {
 		}
 	});
 	
-	/*	const reFetch = async (newQueryParams?: MovieQuery) => {
-	 console.log("PRE_REFETCH_PARAMS: ", queryParams)
-	 const refetchParams = (newQueryParams) ? {...newQueryParams, pageNumber: 0} : {...queryParams, pageNumber: 0};
-	 console.log("REFETCH_PARAMS: ",refetchParams)
-	 try {
-	 setQueryParams(refetchParams)
-	 } catch (e) {
-	 setError(e.message);
-	 }
-	 };*/
 	const getNext = async () => {
 		if (data && data.getMovies.hasMore) {
 			const nextQuery = {...queryParams, pageNumber: queryParams.pageNumber + 1};
@@ -145,17 +135,33 @@ const Dashboard: React.FC = (props: any) => {
 				}
 			);
 		}
-	}, [rating]);
-	
+		if (error) {
+			store.addNotification({
+				title: "Error!",
+				message: `${error}`,
+				type: "info",
+				insert: "top",
+				container: "top-right",
+				animationIn: ["animate__animated", "animate__fadeIn"],
+				animationOut: ["animate__animated", "animate__fadeOut"],
+				dismiss: {
+					duration: 5000,
+					onScreen: true
+				}
+			})
+		}
+	}, [rating, error]);
 	return (
 		<Container fluid={(window.screen.width <= 780)}>
 			<h1> Movies </h1>
-			{(addMovie || !!selectedMovie) && <MovieModal open={true}
-			                                              newMovie={addMovie}
-			                                              selectedMovie={selectedMovie}
-			                                              closeModal={closeModal}
-			                                              queryParams={queryParams}
-			/>}
+			{(addMovie || !!selectedMovie) && (
+				<MovieModal open={true}
+				            newMovie={addMovie}
+				            selectedMovie={selectedMovie}
+				            closeModal={closeModal}
+				            queryParams={queryParams}
+				/>
+			)}
 			<Container textAlign={"center"}>
 				<Grid stackable padded>
 					<GridRow columns={3} style={{width: "50%"}}>

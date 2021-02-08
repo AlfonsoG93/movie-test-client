@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React from "react";
 import {
 	Grid,
 	GridColumn,
@@ -21,6 +21,7 @@ import {Waypoint} from "react-waypoint";
 import {MovieQuery} from "../pages/Dashboard";
 import {ApolloError} from "apollo-client";
 import moment from "moment";
+import {store} from "react-notifications-component";
 
 interface MoviesTableProps {
 	tableLoading: boolean;
@@ -54,14 +55,26 @@ const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
 		) {
 		},
 		onError(err: ApolloError) {
-			console.log(err.message);
+			store.addNotification({
+				title: "New Error!",
+				message: `${err.message}`,
+				type: "info",
+				insert: "top",
+				container: "top-right",
+				animationIn: ["animate__animated", "animate__fadeIn"],
+				animationOut: ["animate__animated", "animate__fadeOut"],
+				dismiss: {
+					duration: 5000,
+					onScreen: true
+				}
+				
+			})
 		}
 	});
 	
 	const getFilterArrow = (header: string) => {
 		const arrowUp = "arrow up";
-		const arrowDown = "arrow down";
-		let arrow = arrowDown;
+		let arrow = "arrow down";
 		const {field, order} = queryParams;
 		if (header === "Grade") {
 			if (field === "grade" && order === "asc") {
@@ -88,39 +101,70 @@ const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
 				arrow = arrowUp;
 			}
 		}
-		
+		if (header === "Ratings") {
+			if (field === "ratingCount" && order === "asc") {
+				arrow = arrowUp;
+			}
+		}
 		return arrow;
 	};
 	
-	const handleFilter = (header: string) => {
-		const {order} = queryParams;
+	const handleFilter = (header: string, currentArrow: string) => {
 		let newQueryParams = {...queryParams};
 		if (header === "Grade") {
-			if (order === "desc") {
-				newQueryParams = {...queryParams, order: "asc", field: "grade"};
-			} else newQueryParams = {...queryParams, order: "desc", field: "grade"};
+			if (currentArrow === "arrow down") {
+				newQueryParams = {...queryParams, order: "asc", field: "grade", pageNumber: 0};
+				changeQuery(newQueryParams);
+			} else if (currentArrow === "arrow up") {
+				newQueryParams = {...queryParams, order: "desc", field: "grade", pageNumber: 0};
+				changeQuery(newQueryParams);
+			}
 		}
 		if (header === "Title") {
-			if (order === "desc") {
-				newQueryParams = {...queryParams, order: "asc", field: "title"};
-			} else newQueryParams = {...queryParams, order: "desc", field: "title"};
+			if (currentArrow === "arrow down") {
+				newQueryParams = {...queryParams, order: "asc", field: "title", pageNumber: 0};
+				changeQuery(newQueryParams);
+			} else if (currentArrow === "arrow up") {
+				newQueryParams = {...queryParams, order: "desc", field: "title", pageNumber: 0};
+				changeQuery(newQueryParams);
+			}
 		}
 		if (header === "Release Date") {
-			if (order === "desc") {
-				newQueryParams = {...queryParams, order: "asc", field: "releaseDate"};
-			} else newQueryParams = {...queryParams, order: "desc", field: "releaseDate"};
+			if (currentArrow === "arrow down") {
+				newQueryParams = {...queryParams, order: "asc", field: "releaseDate", pageNumber: 0};
+				changeQuery(newQueryParams);
+			} else if (currentArrow === "arrow up") {
+				newQueryParams = {...queryParams, order: "desc", field: "releaseDate", pageNumber: 0};
+				changeQuery(newQueryParams);
+			}
 		}
 		if (header === "Cast") {
-			if (order === "desc") {
-				newQueryParams = {...queryParams, order: "asc", field: "actors"};
-			} else newQueryParams = {...queryParams, order: "desc", field: "actors"};
+			if (currentArrow === "arrow down") {
+				newQueryParams = {...queryParams, order: "asc", field: "actors", pageNumber: 0};
+				changeQuery(newQueryParams);
+			} else if (currentArrow === "arrow up") {
+				newQueryParams = {...queryParams, order: "desc", field: "actors", pageNumber: 0};
+				changeQuery(newQueryParams);
+			}
 		}
 		if (header === "Duration") {
-			if (order === "desc") {
-				newQueryParams = {...queryParams, order: "asc", field: "duration"};
-			} else newQueryParams = {...queryParams, order: "desc", field: "duration"};
+			if (currentArrow === "arrow down") {
+				newQueryParams = {...queryParams, order: "asc", field: "duration", pageNumber: 0};
+				changeQuery(newQueryParams);
+			} else if (currentArrow === "arrow up") {
+				newQueryParams = {...queryParams, order: "desc", field: "duration", pageNumber: 0};
+				changeQuery(newQueryParams);
+			}
 		}
-		changeQuery(newQueryParams);
+		if (header === "Ratings") {
+			if (currentArrow === "arrow down") {
+				newQueryParams = {...queryParams, order: "asc", field: "ratingCount", pageNumber: 0};
+				changeQuery(newQueryParams);
+			} else if (currentArrow === "arrow up") {
+				newQueryParams = {...queryParams, order: "desc", field: "ratingCount", pageNumber: 0};
+				changeQuery(newQueryParams);
+			}
+		}
 	};
 	
 	const selectRowHandler = (movie: Movie) => {
@@ -217,12 +261,12 @@ const MoviesTable: React.FC<any> = (props: MoviesTableProps) => {
 									 <Grid>
 										 <GridRow>
 											 <GridColumn width={1} verticalAlign={"middle"}>
-												 {(header !== "Ratings") && <Icon
-													 onClick={() => handleFilter(header)}
+												 <Icon
+													 onClick={() => handleFilter(header, getFilterArrow(header))}
 													 style={{cursor: "pointer"}}
 													 name={getFilterArrow(header) as any}
 													 color={"blue"}
-												 />}
+												 />
 											 </GridColumn>
 											 <GridColumn width={6}>
 												 <Header size='small'>{header}</Header>
